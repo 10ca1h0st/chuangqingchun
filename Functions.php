@@ -338,7 +338,7 @@ function addFriend($con,$username,$friend){
 //用于让考生根据分数查成绩
 /*
 返回值为:
-[['university'=>'西安电子科技大学','location'=>'陕西','batch'=>'本科一批'],['university'=>'西安交通大学','location'=>'陕西','batch'=>'本科一批']]
+[['university'=>'西安电子科技大学','location'=>'陕西','batch'=>'本科一批','property'=>'211 研'],['university'=>'西安交通大学','location'=>'陕西','batch'=>'本科一批','property'=>'985 211研']]
 */
 function queryUniversity($ssdm,$score,$year,$ranger,$kldm){
     $url = "http://gaokao.chsi.com.cn/lqfs/query.do?ssdm=$ssdm&year=$year&kldm=$kldm&score=$score&ranger=$ranger&type=0";
@@ -348,23 +348,83 @@ function queryUniversity($ssdm,$score,$year,$ranger,$kldm){
     array_shift($universitys);
     
     $arr = [];
-    $dict = array('university','location','batch');
+    $dict = array('university','location','batch','property','information');
     foreach($universitys as $key=>$value){
+        if($key>2){
+            break;
+        }
+
         $arr_in = [];
         
         foreach($value->children() as $key1=>$value1){
             if($key1 > 2){
                 break;
             }
+            
+            if($key1 == 0){
+                preg_match('/(\D+)(.*)/i',rtrim(ltrim($value1->plaintext)),$matches);
+                $property = $matches[2];
+                $arr_in['property'] = $property;
+                $arr_in[$dict[$key1]] = $matches[1];
+                continue;
+            }
+
             $arr_in[$dict[$key1]] = rtrim(ltrim($value1->plaintext));
         }
+        $arr_in['information'] = queryUniversityInfo($arr_in['university']);
         array_push($arr,$arr_in);
     }
     return $arr;
     
 }
 
+//根据学校名称获得学校具体信息
+/*
+http://gaokao.chsi.com.cn/sch/search.do?searchType=1&yxmc=西北工业大学
 
+university:学校名称
+introduction:学校介绍的网址
+location:位置
+belong:院校隶属
+type:院校类型
+education:学历层次
+property:985 or 211
+satisfaction:满意度
+logo:校徽的url
+*/
+function queryUniversityInfo($university){
+    $urlbase = 'http://gaokao.chsi.com.cn';
+    $university = urlencode($university);
+    $url = "http://gaokao.chsi.com.cn/sch/search.do?searchType=1&yxmc=$university";
+    $html = file_get_html($url);
+    $rows = $html->find('body div.container div.yxk-table table tbody tr');
+    $selected = $rows[1];
+    $info = array();
+    $info['university'] = rtrim(ltrim($selected->find('td',0)->find('a',0)->plaintext));
+    $info['introduction'] = rtrim(ltrim($urlbase.$selected->find('td',0)->find('a',0)->href));
+    $info['location'] = rtrim(ltrim($selected->find('td',1)->plaintext));
+    $info['belong'] = rtrim(ltrim($selected->find('td',2)->plaintext));
+    $info['type'] = rtrim(ltrim($selected->find('td',3)->plaintext));
+    $info['education'] = rtrim(ltrim($selected->find('td',4)->plaintext));
+    $info['property'] = '';
+    foreach($selected->find('td',5)->find('span') as $key=>$value){
+        $info['property'] .= rtrim(ltrim($value->plaintext));
+    }
+    $info['satisfaction'] = rtrim(ltrim($selected->find('td',7)->plaintext));
+    $info['logo'] = queryUniversityLogo($info['introduction'],$urlbase);
+    return $info;
+    //var_dump($info);
+    
+
+}
+
+//根据学校的介绍网址，得到学校的图片的地址
+function queryUniversityLogo($url,$urlbase){
+    $html = file_get_html($url);
+    $image = rtrim(ltrim($html->find('body div.container div.yxk-yxmsg div.left img',0)->src));
+    $image = $urlbase.$image;
+    return $image;
+}
 
 
 
