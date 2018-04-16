@@ -348,7 +348,7 @@ function queryUniversity($ssdm,$score,$year,$ranger,$kldm){
     array_shift($universitys);
     
     $arr = [];
-    $dict = array('university','location','batch','property','information');
+    $dict = array('university','location','batch');
     foreach($universitys as $key=>$value){
         if($key>2){
             break;
@@ -363,15 +363,14 @@ function queryUniversity($ssdm,$score,$year,$ranger,$kldm){
             
             if($key1 == 0){
                 preg_match('/(\D+)(.*)/i',rtrim(ltrim($value1->plaintext)),$matches);
-                $property = $matches[2];
-                $arr_in['property'] = $property;
                 $arr_in[$dict[$key1]] = $matches[1];
                 continue;
             }
 
             $arr_in[$dict[$key1]] = rtrim(ltrim($value1->plaintext));
         }
-        $arr_in['information'] = queryUniversityInfo($arr_in['university']);
+        $info = queryUniversityInfo($arr_in['university']);
+        $arr_in = array_merge($arr_in,$info);
         array_push($arr,$arr_in);
     }
     return $arr;
@@ -382,12 +381,9 @@ function queryUniversity($ssdm,$score,$year,$ranger,$kldm){
 /*
 http://gaokao.chsi.com.cn/sch/search.do?searchType=1&yxmc=西北工业大学
 
-university:学校名称
 introduction:学校介绍的网址
-location:位置
 belong:院校隶属
 type:院校类型
-education:学历层次
 property:985 or 211
 satisfaction:满意度
 logo:校徽的url
@@ -400,12 +396,9 @@ function queryUniversityInfo($university){
     $rows = $html->find('body div.container div.yxk-table table tbody tr');
     $selected = $rows[1];
     $info = array();
-    $info['university'] = rtrim(ltrim($selected->find('td',0)->find('a',0)->plaintext));
     $info['introduction'] = rtrim(ltrim($urlbase.$selected->find('td',0)->find('a',0)->href));
-    $info['location'] = rtrim(ltrim($selected->find('td',1)->plaintext));
     $info['belong'] = rtrim(ltrim($selected->find('td',2)->plaintext));
     $info['type'] = rtrim(ltrim($selected->find('td',3)->plaintext));
-    $info['education'] = rtrim(ltrim($selected->find('td',4)->plaintext));
     $info['property'] = '';
     foreach($selected->find('td',5)->find('span') as $key=>$value){
         $info['property'] .= rtrim(ltrim($value->plaintext));
