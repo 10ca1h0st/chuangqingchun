@@ -349,8 +349,10 @@ function queryUniversity($ssdm,$score,$year,$ranger,$kldm){
     
     $arr = [];
     $dict = array('university','location','batch');
+
+    $random_length = random_int(5,10);
     foreach($universitys as $key=>$value){
-        if($key>2){
+        if($key > $random_length){
             break;
         }
 
