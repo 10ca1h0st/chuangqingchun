@@ -232,7 +232,15 @@ function search($con,$searchStr){
     or locate(subject,'$searchStr')>0";
     $res = $con->query($select_sql);
     if($res->num_rows <= 0){
-        return array();
+        $select_sql = "select * from teachers where 1";
+        $res = $con->query($select_sql);
+        $arr = $res->fetch_all(MYSQLI_ASSOC);
+        $arr2 = [];
+        foreach($arr as $key=>$value){
+            array_shift($value);
+            array_push($arr2,$value);
+        }
+        return $arr2;
     }
     else{
         $arr = $res->fetch_all(MYSQLI_ASSOC);
@@ -337,8 +345,16 @@ function addFriend($con,$username,$friend){
 
 //用于让考生根据分数查成绩
 /*
-返回值为:
-[['university'=>'西安电子科技大学','location'=>'陕西','batch'=>'本科一批','property'=>'211 研'],['university'=>'西安交通大学','location'=>'陕西','batch'=>'本科一批','property'=>'985 211研']]
+返回值为:一个数组，数组中包含:
+university	哈尔滨工业大学
+location	黑龙江
+batch	本科一批
+introduction	http://gaokao.chsi.com.cn/sch/schoolInfo--schId-174.dhtml
+belong	工业和信息化部
+type	工科
+property	985211
+satisfaction	4.6
+logo	http://gaokao.chsi.com.cn/sch/image/view.do?id=272083485
 */
 function queryUniversity($ssdm,$score,$year,$ranger,$kldm){
     $url = "http://gaokao.chsi.com.cn/lqfs/query.do?ssdm=$ssdm&year=$year&kldm=$kldm&score=$score&ranger=$ranger&type=0";
@@ -350,7 +366,7 @@ function queryUniversity($ssdm,$score,$year,$ranger,$kldm){
     $arr = [];
     $dict = array('university','location','batch');
 
-    $random_length = random_int(5,10);
+    $random_length = random_int(2,4);
     foreach($universitys as $key=>$value){
         if($key > $random_length){
             break;
@@ -364,11 +380,11 @@ function queryUniversity($ssdm,$score,$year,$ranger,$kldm){
             }
             
             if($key1 == 0){
-                preg_match('/(\D+)(.*)/i',rtrim(ltrim($value1->plaintext)),$matches);
+                preg_match('/(\D+).*/i',rtrim(ltrim($value1->plaintext)),$matches);
                 $arr_in[$dict[$key1]] = $matches[1];
                 continue;
             }
-
+            
             $arr_in[$dict[$key1]] = rtrim(ltrim($value1->plaintext));
         }
         $info = queryUniversityInfo($arr_in['university']);
@@ -395,10 +411,9 @@ function queryUniversityInfo($university){
     $university = urlencode($university);
     $url = "http://gaokao.chsi.com.cn/sch/search.do?searchType=1&yxmc=$university";
     $html = file_get_html($url);
-    $rows = $html->find('body div.container div.yxk-table table tbody tr');
-    $selected = $rows[1];
+    $selected = $html->find('body div.container div.yxk-table table tbody tr',1);
     $info = array();
-    $info['introduction'] = rtrim(ltrim($urlbase.$selected->find('td',0)->find('a',0)->href));
+    $info['introduction'] = $urlbase.rtrim(ltrim($selected->find('td',0)->find('a',0)->href));
     $info['belong'] = rtrim(ltrim($selected->find('td',2)->plaintext));
     $info['type'] = rtrim(ltrim($selected->find('td',3)->plaintext));
     $info['property'] = '';
