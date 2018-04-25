@@ -15,18 +15,20 @@ if($con === false){
 
 $username = $_POST['username'] or die(json_encode(['status'=>'fail','reason'=>error_json,],JSON_UNESCAPED_UNICODE));
 $token = $_POST['token'] or die(json_encode(['status'=>'fail','reason'=>error_json,],JSON_UNESCAPED_UNICODE));
-$title = $_POST['title'] or die(json_encode(['status'=>'fail','reason'=>error_json,],JSON_UNESCAPED_UNICODE));
-$content = $_POST['content'] or die(json_encode(['status'=>'fail','reason'=>error_json,],JSON_UNESCAPED_UNICODE));
-$type = $_POST['type'] or die(json_encode(['status'=>'fail','reason'=>error_json,],JSON_UNESCAPED_UNICODE));
-$sourcer = $_POST['sourcer'] or die(json_encode(['status'=>'fail','reason'=>error_json,],JSON_UNESCAPED_UNICODE));
+$belong = $_POST['belong'] or die(json_encode(['status'=>'fail','reason'=>error_json,],JSON_UNESCAPED_UNICODE));
+$id = $_POST['id'] or die(json_encode(['status'=>'fail','reason'=>error_json,],JSON_UNESCAPED_UNICODE));
 
 $res = checkToken($con,$username,$token);
 if($res === false){
     die(json_encode(['status'=>'fail','reason'=>error_check_token,],JSON_UNESCAPED_UNICODE));
 }
 
-publishArticle($con,$username,$title,$content,$type,$sourcer);
-echo json_encode(['status'=>'success','reason'=>''],JSON_UNESCAPED_UNICODE);
+$res = getComment($con,$belong,$id);
+if(count($res) == 0){
+    die(json_encode(['status'=>'fail','reason'=>error_get_comment,],JSON_UNESCAPED_UNICODE));
+}
+$data = ['status'=>'success','results'=>$res];
+echo json_encode($data,JSON_UNESCAPED_UNICODE);
 $con->close();
 
 

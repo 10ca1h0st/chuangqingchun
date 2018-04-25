@@ -34,4 +34,13 @@ define('error_no_article','sorry don not have a article');
 //当用户添加朋友失败时
 define('error_add_friend','sorry you add friend failed');
 
+//当用户重复点赞时
+define('error_good_article','sorry you have gooded article');
+
+//当没有人点赞还请求点赞人的姓名时
+define('error_get_gooder','no one good');
+
+//当没有评论还请求评论时
+define('error_get_comment','no one comment');
+
 ?>

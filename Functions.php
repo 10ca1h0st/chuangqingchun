@@ -83,6 +83,140 @@ function getTeachers($con){
     return $res->fetch_all(MYSQLI_ASSOC);
 }
 
+/*
+//用来过滤名字
+function getFilterArrayByName($name){
+    $filterArrayByName = function ($row) use ($name) {
+        if($row['name'] === $name){
+            return true;
+        }
+        return false;
+    };
+    return $filterArrayByName;
+}
+
+//用来过滤性别
+function getFilterArrayByGender($gender){
+    $filterArrayByGender = function ($row) use ($gender) {
+        if($row['gender'] === $gender){
+            return true;
+        }
+        return false;
+    };
+    return $filterArrayByGender;
+}
+
+//用来过滤年级
+function getFilterArrayByGrade($grade){
+    $filterArrayByGrade = function ($row) use ($grade) {
+        if($row['grade'] === $grade){
+            return true;
+        }
+        return false;
+    };
+    return $filterArrayByGrade;
+}
+
+//用来过滤学校
+function getFilterArrayBySchool($school){
+    $filterArrayBySchool = function ($row) use ($school) {
+        if($row['school'] === $school){
+            return true;
+        }
+        return false;
+    };
+    return $filterArrayBySchool;
+}
+
+//用来过滤科目
+function getFilterArrayBySubject($subject){
+    $filterArrayBySubject = function ($row) use ($subject) {
+        if($row['subject'] === $subject){
+            return true;
+        }
+        return false;
+    };
+    return $filterArrayBySubject;
+}
+*/
+
+/*
+
+//用来过滤名字
+function getFilterArrayByName($searchStr){
+    $filterArrayByName = function ($row) use ($searchStr) {
+        if(stripos($searchStr,$row['name']) === false){
+            return false;
+        }
+        return true;
+    };
+    return $filterArrayByName;
+}
+
+//用来过滤性别
+function getFilterArrayByGender($searchStr){
+    $filterArrayByGender = function ($row) use ($searchStr) {
+        if(stripos($searchStr,$row['gender']) === false){
+            return false;
+        }
+        return true;
+    };
+    return $filterArrayByGender;
+}
+
+//用来过滤年级
+function getFilterArrayByGrade($searchStr){
+    $filterArrayByGrade = function ($row) use ($searchStr) {
+        if(stripos($searchStr,$row['grade']) === false){
+            return false;
+        }
+        return true;
+    };
+    return $filterArrayByGrade;
+}
+
+//用来过滤学校
+function getFilterArrayBySchool($searchStr){
+    $filterArrayBySchool = function ($row) use ($searchStr) {
+        if(stripos($searchStr,$row['school']) === false){
+            return false;
+        }
+        return true;
+    };
+    return $filterArrayBySchool;
+}
+
+//用来过滤科目
+function getFilterArrayBySubject($searchStr){
+    $filterArrayBySubject = function ($row) use ($searchStr) {
+        if(stripos($searchStr,$row['subject']) === false){
+            return false;
+        }
+        return true;
+    };
+    return $filterArrayBySubject;
+}
+
+
+function changeWeight($arr_filter,$weight){
+    foreach(array_keys($arr_filter) as $value){
+        $weight[$value] += 1;
+    }
+    return $weight;
+}
+
+//处理输入的字符串，用在search.php中
+function handleStr($arr,$searchStr){
+    $filterFunctions = ['getFilterArrayByName','getFilterArrayByGender','getFilterArrayByGrade',
+    'getFilterArrayBySchool','getFilterArrayBySubject'];
+    $weight = array_fill(0,count($arr),0);
+    foreach($filterFunctions as $value){
+        $arr_filter = array_filter($arr,($value)($searchStr));
+        $weight = changeWeight($arr_filter,$weight);
+    }
+    return $weight;
+}
+*/
 
 //对search.php中使用的函数的改进
 /*SELECT * FROM `teachers` WHERE 
@@ -126,30 +260,43 @@ function createUserDB($con,$username){
     if($con->query($create_sql) === False){
         return False;
     }
+
     $create_sql = "create table $username.friends ( name text not null );";
     if($con->query($create_sql) === False){
         return False;
     }
-    $create_sql = "create table $username.article ( name text not null,time datetime not null,title text not null,content text not null );";
+
+    $create_sql = "create table $username.article ( id int not null auto_increment,type enum('1','2','3') not null,title text not null,content text not null,username text not null,sourcer text not null,time datetime not null,good int not null,comment text not null,primary key(id) );";
     if($con->query($create_sql) === False){
         return False;
     }
-    publishArticle($con,$username);
+
+    $create_sql = "create table $username.comment ( id int not null auto_increment,comment text not null,commenter text not null,primary key(id) );";
+    if($con->query($create_sql) === False){
+        return False;
+    }
+
+    $create_sql = "create table $username.good ( good_id int not null,gooder text not null );";
+    if($con->query($create_sql) === False){
+        return False;
+    }
+
+    publishArticle($con,$username,"通知","快来Youtome分享你的生活吧 :)",'3',$username);
     return True;
 }
 
 //每一个新用户在出创建的时候，都会在用户对应的数据库下的article表中插入一条默认的说说
-function publishArticle($con,$username,$title="通知",$content="快来Youtome分享你的生活吧 :)"){
+function publishArticle($con,$username,$title,$content,$type,$sourcer){
     $publishTime = date('Y-m-d H:i:s',time());
-    $insert_sql = "insert into $username.article (name,time,title,content) values ('$username','$publishTime','$title','$content');";
+    $insert_sql = "insert into $username.article (type,title,content,username,sourcer,time,good,comment) values ('$type','$title','$content','$username','$sourcer','$publishTime','0','');";
     $con->query($insert_sql);
 }
 
 //从用户的数据库中的article表中得到用户发布的说说
-function getArticle($con,$username,$who){
+function getArticle($con,$username,$who,$type){
     //用户自己发表的说说
     if($who == 'mine'){
-        $select_sql = "select name,time,title,content from $username.article order by time desc limit 0,10";
+        $select_sql = "select id,username,sourcer,time,title,content,good,comment from $username.article where type='$type' order by time desc limit 0,10";
         $res = $con->query($select_sql);
         $articles = $res->fetch_all(MYSQLI_ASSOC);
         $arr = [];
@@ -168,7 +315,7 @@ function getArticle($con,$username,$who){
         $friends = $res->fetch_all(MYSQLI_ASSOC);
         $arr = [];
         foreach($friends as $key=>$value){
-            $res = getArticle($con,$value['name'],'mine');
+            $res = getArticle($con,$value['name'],'mine',$type);
             array_push($arr,$res);
         }
         $arr_t = [];
@@ -301,6 +448,74 @@ function queryUniversityLogo($url,$urlbase){
     $image = $urlbase.$image;
     return $image;
 }
+
+
+//用户评论文章
+function commentArticle($con,$username,$belong,$id,$content){
+    $insert_comment = "insert into $belong.comment (comment,commenter) values ('$content','$username')";
+    $con->query($insert_comment);
+    $get_id = "select last_insert_id()";
+    $res = $con->query($get_id);
+    $comment_id = $res->fetch_all()[0][0];
+    $update_sql = "update $belong.article set comment=concat(comment,concat(',','$comment_id')) where id='$id'";
+    $con->query($update_sql);
+
+}
+
+//用户点赞
+function goodArticle($con,$username,$belong,$id){
+    //先判断是否已经点过赞
+    $isGood_sql = "select * from $belong.good where good_id='$id' and gooder='$username'";
+    $res = $con->query($isGood_sql);
+    if($res->num_rows > 0){
+        return false;
+    }
+
+    $good_sql = "update $belong.article set good=good+1 where id='$id'";
+    $con->query($good_sql);
+    $good_sql = "insert into $belong.good (good_id,gooder) values ('$id','$username')";
+    $con->query($good_sql);
+    return true;
+}
+
+//返回用户评论
+function getComment($con,$belong,$id){
+    $select_sql = "select comment from $belong.article where id='$id'";
+    $res = $con->query($select_sql);
+    
+    $comment_ids = explode(',',substr($res->fetch_all()[0][0],1));
+    $comments = array();
+    foreach($comment_ids as $key=>$value){
+        $select_sql = "select comment,commenter from $belong.comment where id='$value'";
+        $res = $con->query($select_sql);
+        $arr = $res->fetch_all(MYSQLI_ASSOC);
+        foreach($arr as $key1=>$value1){
+            $tem = ['comment'=>$value1['comment'],'commenter'=>$value1['commenter']];
+            array_push($comments,$tem);
+        }
+
+    }
+    return $comments;
+    
+}
+
+//返回点赞的人的名字
+
+function getGooder($con,$belong,$id){
+    $select_sql = "select * from $belong.good where good_id='$id'";
+    $res = $con->query($select_sql);
+    $arr = $res->fetch_all(MYSQLI_ASSOC);
+    $gooders = array();
+    foreach($arr as $key=>$value){
+        $gooder = ['gooder'=>$value['gooder']];
+        array_push($gooders,$gooder);
+    }
+
+    return $gooders;
+
+
+}
+
 
 
 
