@@ -84,6 +84,7 @@ function getTeachers($con){
 }
 
 
+
 //对search.php中使用的函数的改进
 /*SELECT * FROM `teachers` WHERE 
 locate(name,'西电 数学')>0 or locate(gender,'西电 数学')>0 or 
@@ -132,7 +133,7 @@ function createUserDB($con,$username){
         return False;
     }
 
-    $create_sql = "create table $username.article ( id int not null auto_increment,type enum('1','2','3') not null,title text not null,content text not null,username text not null,sourcer text not null,time datetime not null,good int not null,comment text not null,primary key(id) );";
+    $create_sql = "create table $username.article ( id int not null auto_increment,type enum('1','2','3') not null,title text not null,content text not null,username text not null,sourcer text not null,time datetime not null,good int not null,comment text not null,transmit int not null,primary key(id) );";
     if($con->query($create_sql) === False){
         return False;
     }
@@ -147,22 +148,34 @@ function createUserDB($con,$username){
         return False;
     }
 
+    $create_sql = "create table $username.information ( nickname text not null,signature text not null,school text not null,sex enum('男','女','未知') not null,birthday date not null,area text not null,year date not null,major text not null,area_aim text not null,phone text not null,email text not null,img text not null );";
+    if($con->query($create_sql) === False){
+        return False;
+    }
+
+    mkdir('users/'.$username);
+
+    pre_perfect_info($con,$username);
     publishArticle($con,$username,"通知","快来Youtome分享你的生活吧 :)",'3',$username);
     return True;
 }
 
 //每一个新用户在出创建的时候，都会在用户对应的数据库下的article表中插入一条默认的说说
-function publishArticle($con,$username,$title,$content,$type,$sourcer){
+function publishArticle($con,$username,$title,$content,$type,$sourcer,$id){
     $publishTime = date('Y-m-d H:i:s',time());
     $insert_sql = "insert into $username.article (type,title,content,username,sourcer,time,good,comment) values ('$type','$title','$content','$username','$sourcer','$publishTime','0','');";
     $con->query($insert_sql);
+    if($username != $sourcer){
+        $update_sql = "update $sourcer.article set transmit=transmit+1 where id='$id'";
+        $con->query($update_sql);
+    }
 }
 
 //从用户的数据库中的article表中得到用户发布的说说
 function getArticle($con,$username,$who,$type){
     //用户自己发表的说说
     if($who == 'mine'){
-        $select_sql = "select id,username,sourcer,time,title,content,good,comment from $username.article where type='$type' order by time desc limit 0,10";
+        $select_sql = "select * from $username.article where type='$type' order by time desc limit 0,10";
         $res = $con->query($select_sql);
         $articles = $res->fetch_all(MYSQLI_ASSOC);
         $arr = [];
@@ -378,10 +391,25 @@ function getGooder($con,$belong,$id){
     }
 
     return $gooders;
-
-
 }
 
+
+//下面这一部分是完善用户信息的函数
+
+//上传头像，这部分直接在upload_head.php中实现
+function upload_head(){}
+
+
+//修改用户详细信息
+function perfect_info($con,$username,$nickname,$signature,$school,$sex,$birthday,$area,$year,$major,$area_aim,$phone,$email){
+    $update_sql = "update $username.information set nickname='$nickname',signature='$signature',school='$school',sex='$sex',birthday='$birthday',area='$area',year='$year',major='$major',area_aim='$area_aim',phone='$phone',email='$email' where 1;";
+    $con->query($update_sql);
+}
+
+function pre_perfect_info($con,$username){
+    $insert_sql = "insert into $username.information ( nickname,signature,school,sex,birthday,area,year,major,area_aim,phone,email ) values ( '昵称','个性签名','学校','未知','1000-01-01','地区','1000-01-01','意向专业','地区','电话号码','email','' );";
+    $con->query($insert_sql);
+}
 
 
 

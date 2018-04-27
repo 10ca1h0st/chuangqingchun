@@ -43,4 +43,7 @@ define('error_get_gooder','no one good');
 //当没有评论还请求评论时
 define('error_get_comment','no one comment');
 
+//当上传头像失败时
+define('error_upload_head','upload head fail');
+
 ?>

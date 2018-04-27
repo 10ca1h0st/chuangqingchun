@@ -19,13 +19,14 @@ $title = $_POST['title'] or die(json_encode(['status'=>'fail','reason'=>error_js
 $content = $_POST['content'] or die(json_encode(['status'=>'fail','reason'=>error_json,],JSON_UNESCAPED_UNICODE));
 $type = $_POST['type'] or die(json_encode(['status'=>'fail','reason'=>error_json,],JSON_UNESCAPED_UNICODE));
 $sourcer = $_POST['sourcer'] or die(json_encode(['status'=>'fail','reason'=>error_json,],JSON_UNESCAPED_UNICODE));
+$id = $_POST['id'] or die(json_encode(['status'=>'fail','reason'=>error_json,],JSON_UNESCAPED_UNICODE));
 
 $res = checkToken($con,$username,$token);
 if($res === false){
     die(json_encode(['status'=>'fail','reason'=>error_check_token,],JSON_UNESCAPED_UNICODE));
 }
 
-publishArticle($con,$username,$title,$content,$type,$sourcer);
+publishArticle($con,$username,$title,$content,$type,$sourcer,$id);
 echo json_encode(['status'=>'success','reason'=>''],JSON_UNESCAPED_UNICODE);
 $con->close();
 
