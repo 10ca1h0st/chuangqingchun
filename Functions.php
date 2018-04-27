@@ -156,14 +156,14 @@ function createUserDB($con,$username){
     mkdir('users/'.$username);
 
     pre_perfect_info($con,$username);
-    publishArticle($con,$username,"通知","快来Youtome分享你的生活吧 :)",'3',$username);
+    publishArticle($con,$username,"通知","快来Youtome分享你的生活吧 :)",'3',$username,'-1');
     return True;
 }
 
 //每一个新用户在出创建的时候，都会在用户对应的数据库下的article表中插入一条默认的说说
 function publishArticle($con,$username,$title,$content,$type,$sourcer,$id){
     $publishTime = date('Y-m-d H:i:s',time());
-    $insert_sql = "insert into $username.article (type,title,content,username,sourcer,time,good,comment) values ('$type','$title','$content','$username','$sourcer','$publishTime','0','');";
+    $insert_sql = "insert into $username.article (type,title,content,username,sourcer,time,good,comment,transmit) values ('$type','$title','$content','$username','$sourcer','$publishTime','0','',0);";
     $con->query($insert_sql);
     if($username != $sourcer){
         $update_sql = "update $sourcer.article set transmit=transmit+1 where id='$id'";
@@ -407,7 +407,7 @@ function perfect_info($con,$username,$nickname,$signature,$school,$sex,$birthday
 }
 
 function pre_perfect_info($con,$username){
-    $insert_sql = "insert into $username.information ( nickname,signature,school,sex,birthday,area,year,major,area_aim,phone,email ) values ( '昵称','个性签名','学校','未知','1000-01-01','地区','1000-01-01','意向专业','地区','电话号码','email','' );";
+    $insert_sql = "insert into $username.information ( nickname,signature,school,sex,birthday,area,year,major,area_aim,phone,email,img ) values ( '昵称','个性签名','学校','未知','1000-01-01','地区','1000-01-01','意向专业','地区','电话号码','email','users/default/head_img' );";
     $con->query($insert_sql);
 }
 
