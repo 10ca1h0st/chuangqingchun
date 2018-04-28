@@ -46,4 +46,7 @@ define('error_get_comment','no one comment');
 //当上传头像失败时
 define('error_upload_head','upload head fail');
 
+//当获取用户资料失败时
+define('error_no_info','no user information');
+
 ?>

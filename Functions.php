@@ -83,7 +83,140 @@ function getTeachers($con){
     return $res->fetch_all(MYSQLI_ASSOC);
 }
 
+/*
+//用来过滤名字
+function getFilterArrayByName($name){
+    $filterArrayByName = function ($row) use ($name) {
+        if($row['name'] === $name){
+            return true;
+        }
+        return false;
+    };
+    return $filterArrayByName;
+}
 
+//用来过滤性别
+function getFilterArrayByGender($gender){
+    $filterArrayByGender = function ($row) use ($gender) {
+        if($row['gender'] === $gender){
+            return true;
+        }
+        return false;
+    };
+    return $filterArrayByGender;
+}
+
+//用来过滤年级
+function getFilterArrayByGrade($grade){
+    $filterArrayByGrade = function ($row) use ($grade) {
+        if($row['grade'] === $grade){
+            return true;
+        }
+        return false;
+    };
+    return $filterArrayByGrade;
+}
+
+//用来过滤学校
+function getFilterArrayBySchool($school){
+    $filterArrayBySchool = function ($row) use ($school) {
+        if($row['school'] === $school){
+            return true;
+        }
+        return false;
+    };
+    return $filterArrayBySchool;
+}
+
+//用来过滤科目
+function getFilterArrayBySubject($subject){
+    $filterArrayBySubject = function ($row) use ($subject) {
+        if($row['subject'] === $subject){
+            return true;
+        }
+        return false;
+    };
+    return $filterArrayBySubject;
+}
+*/
+
+/*
+
+//用来过滤名字
+function getFilterArrayByName($searchStr){
+    $filterArrayByName = function ($row) use ($searchStr) {
+        if(stripos($searchStr,$row['name']) === false){
+            return false;
+        }
+        return true;
+    };
+    return $filterArrayByName;
+}
+
+//用来过滤性别
+function getFilterArrayByGender($searchStr){
+    $filterArrayByGender = function ($row) use ($searchStr) {
+        if(stripos($searchStr,$row['gender']) === false){
+            return false;
+        }
+        return true;
+    };
+    return $filterArrayByGender;
+}
+
+//用来过滤年级
+function getFilterArrayByGrade($searchStr){
+    $filterArrayByGrade = function ($row) use ($searchStr) {
+        if(stripos($searchStr,$row['grade']) === false){
+            return false;
+        }
+        return true;
+    };
+    return $filterArrayByGrade;
+}
+
+//用来过滤学校
+function getFilterArrayBySchool($searchStr){
+    $filterArrayBySchool = function ($row) use ($searchStr) {
+        if(stripos($searchStr,$row['school']) === false){
+            return false;
+        }
+        return true;
+    };
+    return $filterArrayBySchool;
+}
+
+//用来过滤科目
+function getFilterArrayBySubject($searchStr){
+    $filterArrayBySubject = function ($row) use ($searchStr) {
+        if(stripos($searchStr,$row['subject']) === false){
+            return false;
+        }
+        return true;
+    };
+    return $filterArrayBySubject;
+}
+
+
+function changeWeight($arr_filter,$weight){
+    foreach(array_keys($arr_filter) as $value){
+        $weight[$value] += 1;
+    }
+    return $weight;
+}
+
+//处理输入的字符串，用在search.php中
+function handleStr($arr,$searchStr){
+    $filterFunctions = ['getFilterArrayByName','getFilterArrayByGender','getFilterArrayByGrade',
+    'getFilterArrayBySchool','getFilterArrayBySubject'];
+    $weight = array_fill(0,count($arr),0);
+    foreach($filterFunctions as $value){
+        $arr_filter = array_filter($arr,($value)($searchStr));
+        $weight = changeWeight($arr_filter,$weight);
+    }
+    return $weight;
+}
+*/
 
 //对search.php中使用的函数的改进
 /*SELECT * FROM `teachers` WHERE 
@@ -409,6 +542,20 @@ function perfect_info($con,$username,$nickname,$signature,$school,$sex,$birthday
 function pre_perfect_info($con,$username){
     $insert_sql = "insert into $username.information ( nickname,signature,school,sex,birthday,area,year,major,area_aim,phone,email,img ) values ( '昵称','个性签名','学校','未知','1000-01-01','地区','1000-01-01','意向专业','地区','电话号码','email','users/default/head_img' );";
     $con->query($insert_sql);
+}
+
+//得到用户的资料
+function getUserInfo($con,$username){
+    $select_sql = "select * from $username.information;";
+    $res = $con->query($select_sql);
+    $arr = $res->fetch_all(MYSQLI_ASSOC);
+
+    $res = Array();
+    foreach($arr as $key=>$value){
+        array_push($res,$value);
+    }
+
+    return $res;
 }
 
 
